@@ -79,6 +79,20 @@ const INDUSTRY_TEMPLATES: Record<string, Partial<FormData>> = {
     description: "Full-service real estate solutions including buying, selling, and property management in local areas.",
     offerCatalog: "Home Valuations, Luxury Listings, First-Time Buyer Consultations",
     awards: "Elite Producer Award"
+  },
+  automotive: {
+    vehicleType: "Car",
+    brandName: "Toyota",
+    model: "Fortuner",
+    vehicleModelDate: "2024",
+    transmission: "Automatic",
+    fuelType: "Diesel",
+    driveWheelConfiguration: "Four-wheel drive",
+    bodyType: "SUV",
+    priceCurrency: "PHP",
+    availability: "https://schema.org/InStock",
+    itemCondition: "https://schema.org/UsedCondition",
+    description: "Pristine condition, well-maintained, 1st owner, and ready for adventure."
   }
 };
 
@@ -94,6 +108,9 @@ function App() {
   const applyTemplate = (industry: string) => {
     if (!industry) return;
     const template = INDUSTRY_TEMPLATES[industry];
+    if (industry === 'automotive') {
+      setSchemaType('VEHICLE');
+    }
     setFormData(prev => ({ ...prev, ...template }));
   };
 
@@ -216,6 +233,7 @@ function App() {
             <option value="hvac">HVAC / Air Conditioning</option>
             <option value="homehealth">Home Health Care</option>
             <option value="realestate">Real Estate</option>
+            <option value="automotive">Automotive / Used Cars</option>
           </select>
           <div className="type-selector">{(['LOCAL_BUSINESS', 'SERVICE', 'PRODUCT', 'ARTICLE', 'FAQ', 'CITY_PAGE', 'PERSON', 'VEHICLE'] as SchemaType[]).map(type => (<button key={type} className={schemaType === type ? 'active' : ''} onClick={() => handleTypeChange(type)}>{type.replace('_', ' ')}</button>))}</div>
         </div>
