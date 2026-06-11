@@ -27,6 +27,8 @@ interface FormData {
   // Vehicle specific fields
   vehicleType?: string; vin?: string; mileage?: string; transmission?: string; fuelType?: string;
   vehicleModelDate?: string; bodyType?: string; seatingCapacity?: string;
+  itemCondition?: string; driveWheelConfiguration?: string; image?: string;
+  numberOfPreviousOwners?: string; vehicleEngine?: string;
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -49,7 +51,9 @@ const INITIAL_DATA: Record<SchemaType, FormData> = {
     vehicleType: 'Car', name: '', brandName: '', model: '', vehicleModelDate: '2024', 
     vin: '', mileage: '', transmission: 'Automatic', fuelType: 'Gasoline', 
     price: '', priceCurrency: 'PHP', availability: 'https://schema.org/InStock',
-    description: '', reviews: []
+    description: '', reviews: [], itemCondition: 'https://schema.org/UsedCondition',
+    driveWheelConfiguration: 'Front-wheel drive', bodyType: 'Sedan', image: '',
+    numberOfPreviousOwners: '1', vehicleEngine: '1.5L'
   }
 };
 
@@ -165,12 +169,18 @@ function App() {
         output["@id"] = baseId + "#vehicle";
         output["name"] = formData.name;
         output["description"] = formData.description;
+        output["image"] = formData.image;
         output["brand"] = { "@type": "Brand", "name": formData.brandName };
         output["model"] = formData.model;
         output["vehicleModelDate"] = formData.vehicleModelDate;
         output["vehicleIdentificationNumber"] = formData.vin;
         output["vehicleTransmission"] = formData.transmission;
         output["fuelType"] = formData.fuelType;
+        output["itemCondition"] = formData.itemCondition;
+        output["driveWheelConfiguration"] = formData.driveWheelConfiguration;
+        output["bodyType"] = formData.bodyType;
+        if (formData.numberOfPreviousOwners) output["numberOfPreviousOwners"] = formData.numberOfPreviousOwners;
+        if (formData.vehicleEngine) output["vehicleEngine"] = { "@type": "EngineSpecification", "name": formData.vehicleEngine };
         if (formData.mileage) {
           output["mileageFromOdometer"] = {
             "@type": "QuantitativeValue",
@@ -183,7 +193,8 @@ function App() {
           "@type": "Offer", 
           "price": formData.price, 
           "priceCurrency": formData.priceCurrency, 
-          "availability": formData.availability 
+          "availability": formData.availability,
+          "itemCondition": formData.itemCondition
         };
         if (formData.reviews?.length) output["review"] = buildReviewList(formData.reviews);
     } else if (schemaType === 'FAQ') {
@@ -216,15 +227,29 @@ function App() {
               <div className="form-section">
                 <h3>Vehicle Type & identity</h3>
                 <div className="form-grid">
-                  <label>Vehicle Type</label>
-                  <select name="vehicleType" value={formData.vehicleType} onChange={handleInputChange}>
-                    <option value="Car">Car / SUV / Sedan</option>
-                    <option value="Motorcycle">Motorcycle</option>
-                    <option value="BusOrCoach">Bus / Coach</option>
-                    <option value="Vehicle">Other Vehicle</option>
-                  </select>
+                  <div className="row">
+                    <div>
+                      <label>Vehicle Type</label>
+                      <select name="vehicleType" value={formData.vehicleType} onChange={handleInputChange}>
+                        <option value="Car">Car / SUV / Sedan</option>
+                        <option value="Motorcycle">Motorcycle</option>
+                        <option value="BusOrCoach">Bus / Coach</option>
+                        <option value="Vehicle">Other Vehicle</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Condition</label>
+                      <select name="itemCondition" value={formData.itemCondition} onChange={handleInputChange}>
+                        <option value="https://schema.org/UsedCondition">Used</option>
+                        <option value="https://schema.org/NewCondition">New</option>
+                        <option value="https://schema.org/RefurbishedCondition">Refurbished</option>
+                      </select>
+                    </div>
+                  </div>
                   <label>Listing Name (e.g. 2018 Toyota Vios)</label>
                   <input name="name" value={formData.name} onChange={handleInputChange} />
+                  <label>Image URL</label>
+                  <input name="image" value={formData.image} placeholder="https://example.com/car.jpg" onChange={handleInputChange} />
                   <div className="row">
                     <div><label>Brand</label><input name="brandName" value={formData.brandName} onChange={handleInputChange} /></div>
                     <div><label>Model</label><input name="model" value={formData.model} onChange={handleInputChange} /></div>
@@ -235,8 +260,10 @@ function App() {
               <div className="form-section">
                 <h3>Technical Specifications</h3>
                 <div className="form-grid">
-                  <label>VIN (Vehicle ID Number)</label>
-                  <input name="vin" value={formData.vin} onChange={handleInputChange} />
+                  <div className="row">
+                    <div><label>VIN</label><input name="vin" value={formData.vin} onChange={handleInputChange} /></div>
+                    <div><label>Engine (e.g. 1.5L)</label><input name="vehicleEngine" value={formData.vehicleEngine} onChange={handleInputChange} /></div>
+                  </div>
                   <div className="row">
                     <div><label>Mileage (km)</label><input name="mileage" value={formData.mileage} onChange={handleInputChange} /></div>
                     <div>
@@ -258,10 +285,23 @@ function App() {
                         <option value="Electric">Electric</option>
                       </select>
                     </div>
-                    {formData.vehicleType === 'BusOrCoach' && (
-                      <div><label>Seating Capacity</label><input name="seatingCapacity" value={formData.seatingCapacity} onChange={handleInputChange} /></div>
-                    )}
+                    <div>
+                      <label>Drivetrain</label>
+                      <select name="driveWheelConfiguration" value={formData.driveWheelConfiguration} onChange={handleInputChange}>
+                        <option value="Front-wheel drive">FWD</option>
+                        <option value="Rear-wheel drive">RWD</option>
+                        <option value="All-wheel drive">AWD</option>
+                        <option value="Four-wheel drive">4WD</option>
+                      </select>
+                    </div>
                   </div>
+                  <div className="row">
+                    <div><label>Body Type</label><input name="bodyType" value={formData.bodyType} placeholder="Sedan, SUV..." onChange={handleInputChange} /></div>
+                    <div><label>Previous Owners</label><input name="numberOfPreviousOwners" value={formData.numberOfPreviousOwners} onChange={handleInputChange} /></div>
+                  </div>
+                  {formData.vehicleType === 'BusOrCoach' && (
+                    <div><label>Seating Capacity</label><input name="seatingCapacity" value={formData.seatingCapacity} onChange={handleInputChange} /></div>
+                  )}
                 </div>
               </div>
               <div className="form-section">
@@ -333,7 +373,7 @@ function App() {
                 <div className="gr-snippet">{formData.description || 'Provide a description to see it here...'}</div>
                 {schemaType === 'VEHICLE' && formData.price && (
                   <div className="gr-rich" style={{ color: '#22c55e', fontWeight: 'bold' }}>
-                    Price: {formData.priceCurrency} {formData.price} • {formData.mileage} km • {formData.transmission}
+                    {formData.itemCondition?.includes('Used') ? 'Used' : 'New'} • {formData.priceCurrency} {formData.price} • {formData.mileage} km • {formData.transmission}
                   </div>
                 )}
                 {formData.reviews && formData.reviews.length > 0 && (
