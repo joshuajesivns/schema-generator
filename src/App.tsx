@@ -29,6 +29,13 @@ interface FormData {
   vehicleModelDate?: string; bodyType?: string; seatingCapacity?: string;
   itemCondition?: string; driveWheelConfiguration?: string;
   numberOfPreviousOwners?: string; vehicleEngine?: string;
+  // PH Specific & Pro Broker Fields
+  plateEnding?: string;
+  registrationStatus?: string;
+  documentStatus?: string;
+  paymentMethods?: string; // Comma separated for simplicity in this implementation
+  downpayment?: string;
+  monthlyInstallment?: string;
 }
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -53,7 +60,9 @@ const INITIAL_DATA: Record<SchemaType, FormData> = {
     price: '', priceCurrency: 'PHP', availability: 'https://schema.org/InStock',
     description: '', reviews: [], itemCondition: 'https://schema.org/UsedCondition',
     driveWheelConfiguration: 'Front-wheel drive', bodyType: 'Sedan', image: '',
-    numberOfPreviousOwners: '1', vehicleEngine: '1.5L'
+    numberOfPreviousOwners: '1', vehicleEngine: '1.5L',
+    plateEnding: '1', registrationStatus: 'Registered', documentStatus: 'Complete Docs',
+    paymentMethods: 'Cash, Financing', downpayment: '', monthlyInstallment: ''
   }
 };
 
@@ -196,6 +205,26 @@ function App() {
         output["itemCondition"] = formData.itemCondition;
         output["driveWheelConfiguration"] = formData.driveWheelConfiguration;
         output["bodyType"] = formData.bodyType;
+        
+        // Advanced additional properties (PropertyValue)
+        const additionalProps = [];
+        if (formData.plateEnding) {
+          const codingDays: Record<string, string> = {
+            '1': 'Monday', '2': 'Monday', '3': 'Tuesday', '4': 'Tuesday',
+            '5': 'Wednesday', '6': 'Wednesday', '7': 'Thursday', '8': 'Thursday',
+            '9': 'Friday', '0': 'Friday'
+          };
+          additionalProps.push({
+            "@type": "PropertyValue",
+            "name": "Plate Ending",
+            "value": `${formData.plateEnding} (${codingDays[formData.plateEnding]} Coding)`,
+            "propertyID": "PH-LTO-PLATE-ENDING"
+          });
+        }
+        if (formData.registrationStatus) additionalProps.push({ "@type": "PropertyValue", "name": "Registration Status", "value": formData.registrationStatus });
+        if (formData.documentStatus) additionalProps.push({ "@type": "PropertyValue", "name": "Document Status", "value": formData.documentStatus });
+        if (additionalProps.length > 0) output["additionalProperty"] = additionalProps;
+
         if (formData.numberOfPreviousOwners) output["numberOfPreviousOwners"] = formData.numberOfPreviousOwners;
         if (formData.vehicleEngine) output["vehicleEngine"] = { "@type": "EngineSpecification", "name": formData.vehicleEngine };
         if (formData.mileage) {
@@ -206,13 +235,28 @@ function App() {
           };
         }
         if (formData.seatingCapacity) output["seatingCapacity"] = formData.seatingCapacity;
-        output["offers"] = { 
+        
+        // Enhanced Offer Logic
+        const offer: any = { 
           "@type": "Offer", 
           "price": formData.price, 
           "priceCurrency": formData.priceCurrency, 
           "availability": formData.availability,
           "itemCondition": formData.itemCondition
         };
+        if (formData.paymentMethods) {
+          offer["acceptedPaymentMethod"] = splitAndClean(formData.paymentMethods)?.map(p => {
+            if (p.toLowerCase().includes('cash')) return "https://schema.org/Cash";
+            if (p.toLowerCase().includes('financing')) return "https://schema.org/LoanOrCredit";
+            return p;
+          });
+        }
+        const offerProps = [];
+        if (formData.downpayment) offerProps.push({ "@type": "PropertyValue", "name": "Min. Downpayment", "value": formData.downpayment });
+        if (formData.monthlyInstallment) offerProps.push({ "@type": "PropertyValue", "name": "Monthly Installment", "value": formData.monthlyInstallment });
+        if (offerProps.length > 0) offer["additionalProperty"] = offerProps;
+        
+        output["offers"] = offer;
         if (formData.reviews?.length) output["review"] = buildReviewList(formData.reviews);
     } else if (schemaType === 'FAQ') {
         output["@type"] = "FAQPage"; output["@id"] = baseId + "#faq"; output["mainEntity"] = buildFaqList(formData.faqs || []);
@@ -243,44 +287,81 @@ function App() {
           {schemaType === 'VEHICLE' && (
             <div className="form-sections">
               <div className="form-section">
-                <h3>Vehicle Type & identity</h3>
+                <h3>Vehicle Identity & Categorization</h3>
                 <div className="form-grid">
                   <div className="row">
                     <div>
-                      <label>Vehicle Type</label>
+                      <label>Vehicle Category</label>
                       <select name="vehicleType" value={formData.vehicleType} onChange={handleInputChange}>
-                        <option value="Car">Car / SUV / Sedan</option>
+                        <option value="Car">Passenger Car</option>
                         <option value="Motorcycle">Motorcycle</option>
                         <option value="BusOrCoach">Bus / Coach</option>
-                        <option value="Vehicle">Other Vehicle</option>
+                        <option value="Vehicle">Other Commercial</option>
                       </select>
                     </div>
                     <div>
-                      <label>Condition</label>
-                      <select name="itemCondition" value={formData.itemCondition} onChange={handleInputChange}>
-                        <option value="https://schema.org/UsedCondition">Used</option>
-                        <option value="https://schema.org/NewCondition">New</option>
-                        <option value="https://schema.org/RefurbishedCondition">Refurbished</option>
+                      <label>Body Type</label>
+                      <select name="bodyType" value={formData.bodyType} onChange={handleInputChange}>
+                        <option value="Sedan">Sedan</option>
+                        <option value="SUV">SUV</option>
+                        <option value="Pickup Truck">Pickup Truck</option>
+                        <option value="MPV / AUV">MPV / AUV</option>
+                        <option value="Hatchback">Hatchback</option>
+                        <option value="Van">Van</option>
+                        <option value="Coupe">Coupe</option>
+                        <option value="Wagon">Wagon</option>
                       </select>
                     </div>
                   </div>
-                  <label>Listing Name (e.g. 2018 Toyota Vios)</label>
+                  <label>Listing Title (e.g. 2022 Toyota Vios 1.3 E)</label>
                   <input name="name" value={formData.name} onChange={handleInputChange} />
-                  <label>Image URL</label>
-                  <input name="image" value={formData.image} placeholder="https://example.com/car.jpg" onChange={handleInputChange} />
+                  <label>Featured Image URL</label>
+                  <input name="image" value={formData.image} placeholder="https://example.com/listing.jpg" onChange={handleInputChange} />
                   <div className="row">
-                    <div><label>Brand</label><input name="brandName" value={formData.brandName} onChange={handleInputChange} /></div>
-                    <div><label>Model</label><input name="model" value={formData.model} onChange={handleInputChange} /></div>
-                    <div><label>Year</label><input name="vehicleModelDate" value={formData.vehicleModelDate} onChange={handleInputChange} /></div>
+                    <div><label>Make</label><input name="brandName" value={formData.brandName} placeholder="Toyota" onChange={handleInputChange} /></div>
+                    <div><label>Model</label><input name="model" value={formData.model} placeholder="Vios" onChange={handleInputChange} /></div>
+                    <div><label>Year</label><input name="vehicleModelDate" value={formData.vehicleModelDate} placeholder="2022" onChange={handleInputChange} /></div>
                   </div>
                 </div>
               </div>
+
+              <div className="form-section">
+                <h3>Philippine Compliance & Trust</h3>
+                <div className="form-grid">
+                  <div className="row">
+                    <div>
+                      <label>Plate Ending</label>
+                      <select name="plateEnding" value={formData.plateEnding} onChange={handleInputChange}>
+                        <option value="">Select...</option>
+                        {[1,2,3,4,5,6,7,8,9,0].map(n => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label>Registration Status</label>
+                      <select name="registrationStatus" value={formData.registrationStatus} onChange={handleInputChange}>
+                        <option value="Registered">Registered</option>
+                        <option value="Expired">Expired</option>
+                        <option value="Pending Transfer">Pending Transfer</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Docs Status</label>
+                      <select name="documentStatus" value={formData.documentStatus} onChange={handleInputChange}>
+                        <option value="Complete Docs">Complete Docs</option>
+                        <option value="Open LTO">Open LTO</option>
+                        <option value="Bank Encumbered">Bank Encumbered</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div className="form-section">
                 <h3>Technical Specifications</h3>
                 <div className="form-grid">
                   <div className="row">
-                    <div><label>VIN</label><input name="vin" value={formData.vin} onChange={handleInputChange} /></div>
-                    <div><label>Engine (e.g. 1.5L)</label><input name="vehicleEngine" value={formData.vehicleEngine} onChange={handleInputChange} /></div>
+                    <div><label>VIN / Chassis</label><input name="vin" value={formData.vin} onChange={handleInputChange} /></div>
+                    <div><label>Engine / Displacement</label><input name="vehicleEngine" value={formData.vehicleEngine} placeholder="1.5L / 2.4L" onChange={handleInputChange} /></div>
                   </div>
                   <div className="row">
                     <div><label>Mileage (km)</label><input name="mileage" value={formData.mileage} onChange={handleInputChange} /></div>
@@ -314,26 +395,37 @@ function App() {
                     </div>
                   </div>
                   <div className="row">
-                    <div><label>Body Type</label><input name="bodyType" value={formData.bodyType} placeholder="Sedan, SUV..." onChange={handleInputChange} /></div>
-                    <div><label>Previous Owners</label><input name="numberOfPreviousOwners" value={formData.numberOfPreviousOwners} onChange={handleInputChange} /></div>
+                    <div>
+                      <label>Condition</label>
+                      <select name="itemCondition" value={formData.itemCondition} onChange={handleInputChange}>
+                        <option value="https://schema.org/UsedCondition">Used</option>
+                        <option value="https://schema.org/NewCondition">New</option>
+                        <option value="https://schema.org/RefurbishedCondition">Refurbished</option>
+                      </select>
+                    </div>
+                    <div><label>Prev. Owners</label><input name="numberOfPreviousOwners" value={formData.numberOfPreviousOwners} onChange={handleInputChange} /></div>
                   </div>
-                  {formData.vehicleType === 'BusOrCoach' && (
-                    <div><label>Seating Capacity</label><input name="seatingCapacity" value={formData.seatingCapacity} onChange={handleInputChange} /></div>
-                  )}
                 </div>
               </div>
+
               <div className="form-section">
-                <h3>Pricing & Offer</h3>
+                <h3>Market & Financing</h3>
                 <div className="form-grid">
                   <div className="row">
-                    <div><label>Price</label><input name="price" value={formData.price} onChange={handleInputChange} /></div>
+                    <div><label>Listing Price</label><input name="price" value={formData.price} onChange={handleInputChange} /></div>
                     <div><label>Currency</label><input name="priceCurrency" value={formData.priceCurrency} onChange={handleInputChange} /></div>
                   </div>
-                  <label>Description</label>
-                  <textarea name="description" value={formData.description} onChange={handleInputChange} />
+                  <label>Payment Methods (comma separated)</label>
+                  <input name="paymentMethods" value={formData.paymentMethods} placeholder="Cash, Financing, Trade-in" onChange={handleInputChange} />
+                  <div className="row">
+                    <div><label>Downpayment (e.g. 30%)</label><input name="downpayment" value={formData.downpayment} onChange={handleInputChange} /></div>
+                    <div><label>Monthly (e.g. 12,500)</label><input name="monthlyInstallment" value={formData.monthlyInstallment} onChange={handleInputChange} /></div>
+                  </div>
+                  <label>Public Remarks / Sales Pitch</label>
+                  <textarea name="description" value={formData.description} placeholder="Describe the vehicle condition and selling points..." onChange={handleInputChange} />
                 </div>
               </div>
-              <div className="form-section"><h3>Reviews</h3><button className="add-small" onClick={addReview}>+ Add Review</button><ReviewEditor reviews={formData.reviews || []} onUpdate={updateReview} onRemove={removeReview} /></div>
+              <div className="form-section"><h3>Customer Reviews</h3><button className="add-small" onClick={addReview}>+ Add Review</button><ReviewEditor reviews={formData.reviews || []} onUpdate={updateReview} onRemove={removeReview} /></div>
             </div>
           )}
           {schemaType === 'LOCAL_BUSINESS' && (
@@ -392,6 +484,11 @@ function App() {
                 {schemaType === 'VEHICLE' && formData.price && (
                   <div className="gr-rich" style={{ color: '#22c55e', fontWeight: 'bold' }}>
                     {formData.itemCondition?.includes('Used') ? 'Used' : 'New'} • {formData.priceCurrency} {formData.price} • {formData.mileage} km • {formData.transmission}
+                  </div>
+                )}
+                {schemaType === 'VEHICLE' && formData.plateEnding && (
+                  <div className="gr-rich" style={{ color: '#38bdf8', fontSize: '0.8rem' }}>
+                    Plate Ending: {formData.plateEnding} • {formData.paymentMethods?.includes('Financing') ? 'Financing Available' : 'Cash Only'}
                   </div>
                 )}
                 {formData.reviews && formData.reviews.length > 0 && (
