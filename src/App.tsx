@@ -27,7 +27,7 @@ interface FormData {
   // Vehicle specific fields
   vehicleType?: string; vin?: string; mileage?: string; transmission?: string; fuelType?: string;
   vehicleModelDate?: string; bodyType?: string; seatingCapacity?: string;
-  itemCondition?: string; driveWheelConfiguration?: string; image?: string;
+  itemCondition?: string; driveWheelConfiguration?: string;
   numberOfPreviousOwners?: string; vehicleEngine?: string;
 }
 
