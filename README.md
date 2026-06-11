@@ -1,73 +1,32 @@
-# React + TypeScript + Vite
+# JVNS Schema Generator (Advanced SEO Engineering)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A professional-grade, technical SEO tool built to automate the generation of complex JSON-LD structured data. This tool is specifically architected to bridge the gap between raw data and search engine entities, with a specialized focus on **Automotive and Local Services verticals**.
 
-Currently, two official plugins are available:
+## 🚀 Live Demo
+**[Launch Schema Generator](https://joshuajesivns.github.io/schema-generator/)** *(Replace with your Vercel/Pages link if different)*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Key Features
+- **Automotive Vertical (New):** Specialized support for `Vehicle`, `Car`, `Motorcycle`, and `BusOrCoach` schemas.
+- **Technical Precision:** Supports VIN (Vehicle Identification Number), Odometer/Mileage (KMT), Transmission types, and Fuel specifications.
+- **Entity Linking:** Uses `@id` canonical referencing to link inventory directly to parent `AutoDealer` or `LocalBusiness` entities for cleaner Knowledge Graph discovery.
+- **Multi-Vertical Support:** Includes LocalBusiness, Service, Product, FAQ, Article, and Person schemas.
+- **Real-time Validation:** Live JSON-LD preview and Google Search Result mockup to verify rich snippet eligibility.
 
-## React Compiler
+## 🛠️ Technical Stack
+- **Framework:** React 18 + TypeScript
+- **Build Tool:** Vite
+- **Styling:** Custom CSS for high-performance, responsive UI
+- **Logic:** Scalable template-driven serialization for Schema.org compliance
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 📈 Why this matters for SEO
+In the 2026 search landscape, **Generative Engine Optimization (GEO)** and **Entity Authority** are paramount. This tool ensures that brand data is not just "crawled" but "understood" by LLMs (like Gemini and Perplexity) through:
+1. **Semantic Clarity:** Using the most specific Schema.org types available.
+2. **Data Completeness:** Encouraging the use of recommended fields like VIN and mileage that provide high-trust signals.
+3. **Structured Relationships:** Defining the connection between businesses and their offerings via nested objects and unique identifiers.
 
-## Expanding the ESLint configuration
+## 👨‍💻 Developed by
+**Joshua Jesi Venus**  
+*Senior SEO & AI Strategy Specialist*
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+© 2026 JVNS | Built for the future of search.
